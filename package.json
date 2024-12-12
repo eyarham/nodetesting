@@ -1,0 +1,30 @@
+{
+  "name": "nodetesting",
+  "version": "1.0.0",
+  "description": "a test of node.js things",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "nodemon server.js --ignore client",
+    "client": "nodemon client.js --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eyarham/nodetesting.git"
+  },
+  "keywords": [
+    "nodejs"
+  ],
+  "author": "eyarham",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eyarham/nodetesting/issues"
+  },
+  "homepage": "https://github.com/eyarham/nodetesting#readme",
+  "dependencies": {
+    "concurrently": "^9.1.0",
+    "express": "^4.21.2",
+    "nodemon": "^3.1.7"
+  }
+}

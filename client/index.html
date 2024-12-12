@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <p id="data-container"></p>
+    <p id="form-container"></p>
+
+</body>
+<script>
+    const dataContainerElement = document.getElementById("data-container");
+    const formContainerElement = document.getElementById("form-container");
+    const baseUrl = "http://localhost:3000";
+    const fetchUrl = `${baseUrl}/items`;
+    const fieldsUrl = `${fetchUrl}/fields`;
+    getData = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const json = await response.json();
+            console.log(json);
+            return json
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+    refreshDataContainer = () => {
+        getData(fetchUrl).then(data => {
+            var listElement = "<ul>"
+            data.forEach(element => {
+                listElement += `<li>${element.name}</li>`
+            })
+            listElement += "</ul>"
+            dataContainerElement.innerHTML = listElement;
+        });
+    }
+    refreshDataContainer();//call first time
+    postData = async (data) => {
+        await fetch(fetchUrl, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+            .then((response) => response.json())
+            .then((json) => console.log(json))
+            .then(await refreshDataContainer());
+    }
+
+    const onSubmit = async () => {
+        var postValueArray = [];
+        var children = formContainerElement.children[0].children;
+        var postString = "{"
+        for (var i = 0; i < children.length; i++) {
+            var valueToAdd;
+            var keyToAdd;
+            var jsonStringToAdd;
+            if (i === 0 || i === 2) {
+                keyToAdd = children[i].innerHTML;
+                postString += `"${keyToAdd}":`;
+            }
+            if (i === 1 || i === 3) {
+                valueToAdd = children[i].value;
+                postString += `"${valueToAdd}",`;
+            }
+        }
+        postString = postString.slice(0, -1);
+        postString += "}"
+        const postJson = JSON.parse(postString);
+        await postData(postJson);
+    }
+
+    getData(fieldsUrl).then(fields => {
+        var formElement = `<form id="submitForm">`;
+        fields.forEach((field, i) => {
+            formElement += `<label name="field${i}">${field.name}</label><input id="field${i}" name="field${i}"></input>`;
+        })
+        formElement += `<button type="submit">add</button>`
+        formElement += "</form>"
+        formContainerElement.innerHTML = formElement;
+        document.getElementById("submitForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            onSubmit();
+        });
+    })
+</script>
+
+</html>
