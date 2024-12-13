@@ -9,6 +9,6 @@ app.get('/', (req, res) => {
   res.send('Hey, I\'m a Node.js app!')
 })
 app.get('/items', (req, res) => {
-  res.sendFile(`${__dirname}\\client\\index.html`);
+  res.sendFile(`${__dirname}/client/index.html`);
 })
 
