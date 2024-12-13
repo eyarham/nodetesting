@@ -46,37 +46,27 @@
             }
         })
             .then((response) => response.json())
-            .then((json) => console.log(json))
-            .then(await refreshDataContainer());
+            .then((json) => console.log(json));
     }
 
     const onSubmit = async () => {
         var postValueArray = [];
         var children = formContainerElement.children[0].children;
-        var postString = "{"
+        var postJson = {};
         for (var i = 0; i < children.length; i++) {
-            var valueToAdd;
-            var keyToAdd;
-            var jsonStringToAdd;
-            if (i === 0 || i === 2) {
-                keyToAdd = children[i].innerHTML;
-                postString += `"${keyToAdd}":`;
-            }
-            if (i === 1 || i === 3) {
-                valueToAdd = children[i].value;
-                postString += `"${valueToAdd}",`;
+            const field = children[i];
+            if (field.tagName === "DIV") {
+                const fieldJson = { [field.children[0].innerHTML]: field.children[1].value }
+                postJson = { ...postJson, ...fieldJson }
             }
         }
-        postString = postString.slice(0, -1);
-        postString += "}"
-        const postJson = JSON.parse(postString);
         await postData(postJson);
+        await refreshDataContainer();
     }
-
     getData(fieldsUrl).then(fields => {
         var formElement = `<form id="submitForm">`;
         fields.forEach((field, i) => {
-            formElement += `<label name="field${i}">${field.name}</label><input id="field${i}" name="field${i}"></input>`;
+            formElement += `<div id="field-container${i}"><label name="field${i}">${field.name}</label><input id="field${i}" name="field${i}"></input></div>`;
         })
         formElement += `<button type="submit">add</button>`
         formElement += "</form>"
