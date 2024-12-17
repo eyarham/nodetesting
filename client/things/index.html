@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <p id="data-container"></p>
+    <p id="form-container"></p>
+    <p id="single-container"></p>
+</body>
+<script>
+    const dataContainerElement = document.getElementById("data-container");
+    const formContainerElement = document.getElementById("form-container");
+    const singleContainerElement = document.getElementById("single-container");
+
+    const baseUrl = "http://localhost:3000";
+    const fetchUrl = `${baseUrl}/things`;
+    const fieldsUrl = `${fetchUrl}/fields`;
+    getData = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const json = await response.json();
+            console.log(json);
+            return json
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+    openSingle = async (element) => {
+        const row = await getData(`${fetchUrl}/${element.id}`);
+        console.info(row.name)
+        console.info("opensingle")
+        var singleElement = document.createElement('div');
+        singleElement.setAttribute('id', row.id);
+        singleElement.innerText = `id: ${row.id}`;
+        singleElement.appendChild(await createForm(() => onSubmitPut(row), row, "update"));
+        var deleteButton = document.createElement('button');
+        deleteButton.addEventListener('click', () => onSubmitDelete(row.id));
+        deleteButton.innerText = "Delete";
+        singleElement.appendChild(deleteButton);
+        singleContainerElement.replaceChildren(singleElement);
+    }
+    refreshDataContainer = () => {
+        getData(fetchUrl).then(data => {
+            var ul = document.createElement('ul');
+            data.forEach(row => {
+                var li = document.createElement('li');
+                li.setAttribute('id', row.id)
+                li.addEventListener('click', () => openSingle(li));
+                li.innerHTML = row.name;
+                ul.appendChild(li);
+            })
+            dataContainerElement.replaceChildren(ul);
+        });
+    }
+    refreshDataContainer();//call first time
+    postData = async (data) => {
+        await fetch(fetchUrl, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+            .then((response) => response.json())
+            .then((json) => console.log(json));
+    }
+    putData = async (data) => {
+        await fetch(`${fetchUrl}/${data.id}`, {
+            method: "PUT",
+            body: JSON.stringify(data),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+            .then((response) => response.json())
+            .then((json) => console.log(json));
+    }
+    deleteData = async (id) => {
+        await fetch(`${fetchUrl}/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+            .then((response) => response.json())
+            .then((json) => console.log(json));
+    }
+    getDataFromForm = async (formContainer) => {
+        var form = formContainer.children[0];
+        var children = form.children;
+        var postJson = {};
+        if (form?.attributes?.rowId?.value) {
+            postJson = { ...postJson, id: form.attributes.rowId.value }
+        }
+        for (var i = 0; i < children.length; i++) {
+            const field = children[i];
+            if (field.tagName === "DIV") {
+                var fieldJson = { [field.children[0].innerHTML]: field.children[1].value }
+
+                postJson = { ...postJson, ...fieldJson }
+            }
+        }
+        return postJson;
+    }
+    const onSubmitPost = async () => {
+        await postData(await getDataFromForm(formContainerElement));
+        await refreshDataContainer();
+    }
+    const onSubmitPut = async () => {
+        await putData(await getDataFromForm(singleContainerElement.children[0]));
+        await refreshDataContainer();
+    }
+    const onSubmitDelete = async (id) => {
+        await deleteData(id);
+        await refreshDataContainer();
+        singleContainerElement.replaceChildren();
+    }
+    createForm = async (onSubmit, data, submitText = "add") => {
+        const fields = await getData(fieldsUrl);
+        var formElement = document.createElement('form');
+        if (data) {
+            formElement.setAttribute('rowId', data.id);
+        }
+        fields.forEach((field, i) => {
+            var divElement = document.createElement('div');
+            divElement.setAttribute('id', `field-container${i}`);
+            var labelElement = document.createElement('label');
+            labelElement.setAttribute('name', `field${i}`);
+            labelElement.innerText = field.name;
+            var inputElement = document.createElement('input');
+            inputElement.setAttribute('id', `field${i}`);
+            inputElement.setAttribute('name', `field${i}`);
+            if (data) {
+                inputElement.value = data[field.name];
+            }
+            divElement.replaceChildren();
+            divElement.appendChild(labelElement);
+            divElement.appendChild(inputElement);
+            formElement.appendChild(divElement);
+        })
+        var buttonElement = document.createElement('button');
+        buttonElement.setAttribute('type', 'submit');
+        buttonElement.innerText = submitText;
+        formElement.appendChild(buttonElement);
+        formElement.addEventListener("submit", function (event) {
+            event.preventDefault();
+            onSubmit();
+        });
+        return formElement;
+    }
+
+    createForm(onSubmitPost).then(form => formContainerElement.appendChild(form));
+
+</script>
+
+</html>

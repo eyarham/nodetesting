@@ -1,4 +1,5 @@
 const express = require('express');
+const CrudSql = require('./server/crudSql');
 
 const app = express()
 const port = process.env.PORT || 3000; // Use the port provided by the host or default to 3000
@@ -7,7 +8,7 @@ app.listen(port, () => {
 });
 
 app.use((req, res, next) => {
-  const allowedOrigins = ['http://localhost:8000'];
+  const allowedOrigins = ['http://localhost:8000', 'http://localhost:8888'];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -19,8 +20,14 @@ app.use((req, res, next) => {
   return next();
 });
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   res.send('Hey, I\'m a Node.js app!')
+})
+
+app.get('/dbtest', async (req, res) => {
+  const testDb = new CrudSql(app);
+  const message = await testDb.testDb();
+  res.send(`message from the server: ${message}`)
 })
 const data = [
   { id: 1, name: 'Item 1', color: "blue" },
@@ -30,6 +37,7 @@ const data = [
 
 // Middleware to parse JSON requests
 app.use(express.json());
+new CrudSql("things").addCrudEndpoints(app);
 
 app.get('/items/fields', (req, res) => {
   res.json([{ "name": "name", "type": "string" }, { "name": "color", "type": "string" }])
