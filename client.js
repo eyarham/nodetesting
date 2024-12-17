@@ -12,3 +12,6 @@ app.get('/items', (req, res) => {
   res.sendFile(`${__dirname}/client/index.html`);
 })
 
+app.get('/things', (req, res) => {
+  res.sendFile(`${__dirname}/client/things/index.html`);
+})
